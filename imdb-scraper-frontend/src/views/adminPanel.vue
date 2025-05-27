@@ -53,7 +53,7 @@ import DownloadExcel from "vue3-json-excel";
 const url = ref("");
 const movies = ref([]);
 const loading = ref(false);
-const api = import.meta.env.VITE_API_URL;
+const api = "https://imdb-scraper-z9hk.onrender.com";
 
 async function fetchMovies() {
   const res = await axios.get(`${api}/movies`);

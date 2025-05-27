@@ -53,7 +53,7 @@ import DownloadExcel from "vue3-json-excel";
 const url = ref("");
 const movies = ref([]);
 const loading = ref(false);
-const api = "http://localhost:5000";
+const api = import.meta.env.VITE_API_URL;
 
 async function fetchMovies() {
   const res = await axios.get(`${api}/movies`);

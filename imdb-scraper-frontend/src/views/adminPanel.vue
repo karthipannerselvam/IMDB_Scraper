@@ -46,8 +46,8 @@
 </template>
 
 <script setup>
-import axios from "axios";
 import { ref, onMounted } from "vue";
+import axios from "axios";
 import DownloadExcel from "vue3-json-excel";
 
 const url = ref("");
@@ -72,12 +72,5 @@ async function scrapeNow() {
   }
   loading.value = false;
 }
-
 onMounted(fetchMovies);
-</script>
-
-<script>
-export default {
-  components: { DownloadExcel },
-};
 </script>

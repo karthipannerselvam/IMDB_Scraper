@@ -1,5 +1,5 @@
 
-const puppeteer = require("puppeteer-core");
+const puppeteer = require("puppeteer");
 
 async function scrapeIMDB(url) {
   const browser = await puppeteer.launch({

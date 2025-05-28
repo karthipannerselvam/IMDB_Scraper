@@ -63,7 +63,7 @@ async function fetchMovies() {
 async function scrapeNow() {
   if (!url.value) return alert("Enter a valid URL.");
   loading.value = true;
-  try {
+  try { 
     await axios.post(`${api}/scrape`, { url: url.value });
     await fetchMovies();
     url.value = "";

@@ -5,7 +5,7 @@ async function scrapeIMDB(url) {
   const browser = await puppeteer.launch({
     args: chromium.args,
     executablePath: await chromium.executablePath || "/usr/bin/chromium-browser",
-    headless: chromium.headless,
+    headless: true,
     defaultViewport: chromium.defaultViewport,
   });
 

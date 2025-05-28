@@ -1,7 +1,6 @@
 {
   "dependencies": {
     "chrome-aws-lambda": "^10.1.0",
-    "puppeteer-core": "^24.9.0",
     "vue3-json-excel": "^1.0.10-alpha"
   }
 }

@@ -2,18 +2,20 @@ const chromium = require("chrome-aws-lambda");
 const puppeteer = require("puppeteer-core");
 
 async function scrapeIMDB(url) {
+  const executablePath = await chromium.executablePath;
+
   const browser = await puppeteer.launch({
     args: chromium.args,
-    executablePath: await chromium.executablePath || "/usr/bin/chromium-browser",
-    headless: true,
     defaultViewport: chromium.defaultViewport,
+    executablePath: executablePath,
+    headless: chromium.headless,
   });
 
   const page = await browser.newPage();
 
   await page.setUserAgent(
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-    "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+      "(KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
   );
 
   await page.setExtraHTTPHeaders({
@@ -29,9 +31,15 @@ async function scrapeIMDB(url) {
 
   const data = await page.evaluate(() => {
     const title = document.querySelector("h1")?.innerText.trim() || "N/A";
-    const rating = document.querySelector('[data-testid="hero-rating-bar__aggregate-rating__score"] span')?.innerText || "N/A";
-    const genres = Array.from(document.querySelectorAll('[data-testid="genres"] a')).map((el) => el.innerText);
-    const summary = document.querySelector('[data-testid="plot-xl"]')?.innerText || "N/A";
+    const rating =
+      document.querySelector('[data-testid="hero-rating-bar__aggregate-rating__score"] span')
+        ?.innerText || "N/A";
+    const genres = Array.from(
+      document.querySelectorAll('[data-testid="genres"] a')
+    ).map((el) => el.innerText);
+    const summary =
+      document.querySelector('[data-testid="plot-xl"]')?.innerText || "N/A";
+
     return { title, rating, genres, summary };
   });
 

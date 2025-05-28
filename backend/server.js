@@ -1,49 +1,52 @@
 const express = require("express");
-const cors = require("cors");
 const mongoose = require("mongoose");
+const cors = require("cors");
+const dotenv = require("dotenv");
 const scrapeIMDB = require("./scraper");
-require("dotenv").config();
+const Movie = require("./models/Movie");
 
+dotenv.config();
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-app.use(cors({
-  origin: "*" // You can restrict this to just your frontend URL
-}));
+// Explicit CORS allowing your frontend domain only:
+const corsOptions = {
+  origin: process.env.FRONTEND_URL || "*", // set FRONTEND_URL in your Render env vars
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
+
 app.use(express.json());
 
-// MongoDB model
-const movieSchema = new mongoose.Schema({
-  title: String,
-  rating: String,
-  genres: [String],
-  summary: String,
-});
-const Movie = mongoose.model("Movie", movieSchema);
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.error("MongoDB connection error:", err));
 
-// Scrape endpoint
+// POST /scrape
 app.post("/scrape", async (req, res) => {
+  const { url } = req.body;
+  if (!url || !url.startsWith("https://www.imdb.com/title/")) {
+    return res.status(400).json({ error: "Invalid IMDb URL." });
+  }
   try {
-    const { url } = req.body;
-    const data = await scrapeIMDB(url);
-    const saved = await Movie.create(data);
-    res.status(200).json(saved);
+    const movie = await scrapeIMDB(url);
+    const newMovie = new Movie(movie);
+    await newMovie.save();
+    res.json(newMovie);
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: "Scraping failed." });
+    res.status(500).json({ error: err.message });
   }
 });
 
-// Get all movies
+// GET /movies
 app.get("/movies", async (req, res) => {
-  const movies = await Movie.find().sort({ _id: -1 });
-  res.json(movies);
+  try {
+    const movies = await Movie.find().sort({ createdAt: -1 });
+    res.json(movies);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// DB connection and start server
-mongoose
-  .connect(process.env.MONGO_URI, { dbName: "imdb" })
-  .then(() => {
-    app.listen(PORT, () => console.log("Server running on port", PORT));
-  })
-  .catch((err) => console.error("DB error", err));
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

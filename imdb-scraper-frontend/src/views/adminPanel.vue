@@ -56,8 +56,12 @@ const loading = ref(false);
 const api = "https://imdb-scraper-1.onrender.com";
 
 async function fetchMovies() {
-  const res = await axios.get(`${api}/movies`);
-  movies.value = res.data;
+  try {
+    const res = await axios.get(`${api}/movies`);
+    movies.value = res.data;
+  } catch (err) {
+    alert("Failed to fetch movies.");
+  }
 }
 
 async function scrapeNow() {
@@ -68,7 +72,7 @@ async function scrapeNow() {
     await fetchMovies();
     url.value = "";
   } catch {
-    alert("Scraping failed.");
+    alert("Scraping failed: " + (error.response?.data?.error || error.message));
   }
   loading.value = false;
 }

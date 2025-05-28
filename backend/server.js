@@ -1,38 +1,49 @@
 const express = require("express");
-const mongoose = require("mongoose");
 const cors = require("cors");
-const dotenv = require("dotenv");
-const scrapeIMDB = require("./scraper"); // Updated
-const Movie = require("./models/Movie"); // Updated
+const mongoose = require("mongoose");
+const scrapeIMDB = require("./scrape");
+require("dotenv").config();
 
-dotenv.config();
 const app = express();
-app.use(cors());
+const PORT = process.env.PORT || 5000;
+
+app.use(cors({
+  origin: "*" // You can restrict this to just your frontend URL
+}));
 app.use(express.json());
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => console.log("MongoDB Connected"))
-  .catch((err) => console.error(err));
+// MongoDB model
+const movieSchema = new mongoose.Schema({
+  title: String,
+  rating: String,
+  genres: [String],
+  summary: String,
+});
+const Movie = mongoose.model("Movie", movieSchema);
 
-// POST /scrape
+// Scrape endpoint
 app.post("/scrape", async (req, res) => {
-  const { url } = req.body;
   try {
-    const movie = await scrapeIMDB(url);
-    const newMovie = new Movie(movie);
-    await newMovie.save();
-    res.json(newMovie);
+    const { url } = req.body;
+    const data = await scrapeIMDB(url);
+    const saved = await Movie.create(data);
+    res.status(200).json(saved);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ error: "Scraping failed." });
   }
 });
 
-// GET /movies
+// Get all movies
 app.get("/movies", async (req, res) => {
-  const movies = await Movie.find().sort({ createdAt: -1 });
+  const movies = await Movie.find().sort({ _id: -1 });
   res.json(movies);
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+// DB connection and start server
+mongoose
+  .connect(process.env.MONGO_URI, { dbName: "imdb" })
+  .then(() => {
+    app.listen(PORT, () => console.log("Server running on port", PORT));
+  })
+  .catch((err) => console.error("DB error", err));
